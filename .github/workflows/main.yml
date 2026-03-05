@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    # МЫ УХОДИМ С UBUNTU-LATEST НА 22.04, ЧТОБЫ ВСЁ ЗАРАБОТАЛО
+    # МЫ ПЕРЕХОДИМ НА 22.04 — ЭТО РЕШИТ ПРОБЛЕМУ С PYTHON
     runs-on: ubuntu-22.04
 
     steps:
@@ -28,21 +28,21 @@ jobs:
       - name: Install Buildozer and Cython
         run: |
           pip install --upgrade pip
-          # Фиксируем версию Cython, иначе будет ошибка компиляции
+          # Версия 0.29.33 критически важна для Kivy
           pip install --user Cython==0.29.33 buildozer
 
       - name: Build APK
         run: |
-          # Принудительная очистка, чтобы старый мусор не мешал
+          # Очистка кэша от старых ошибок
           /home/runner/.local/bin/buildozer android clean
           yes | /home/runner/.local/bin/buildozer android debug
         env:
-          # Buildozer сейчас требует Java 17 для новых SDK
+          # Принудительно используем Java 17 для Android SDK
           JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: my-music-player
+          name: MusicPlayer-APK
           path: bin/*.apk
           
