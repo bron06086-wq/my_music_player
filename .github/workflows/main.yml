@@ -13,6 +13,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
-          name: my_music_player_apk
+          name: my_app_bundle
           path: bin/*.apk
           
