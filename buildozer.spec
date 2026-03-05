@@ -5,16 +5,23 @@ package.domain = org.test
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 0.1
-# Убрал pillow отсюда, чтобы избежать конфликта патчей
-requirements = python3,kivy==2.2.1,kivymd
+
+# ВАЖНО: Убрал Pillow, KivyMD сам возьмет что нужно стабильной версии
+requirements = python3,kivy==2.2.1,kivymd==1.1.1
+
 orientation = portrait
 fullscreen = 0
-android.permissions = INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE
+
+# Разрешения для работы с музыкой
+android.permissions = INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, MANAGE_EXTERNAL_STORAGE
+
+# Настройки для GitHub Actions (Ubuntu 24.04)
 android.api = 33
 android.minapi = 21
-android.sdk = 33
 android.ndk = 25b
 android.archs = arm64-v8a
 android.accept_sdk_license = True
-# Оставляем мастер-ветку для фикса ошибок Ubuntu 24.04
+
+# Фикс для ошибки "patch unexpectedly ends"
 p4a.branch = master
+p4a.bootstrap = sdl2
