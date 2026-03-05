@@ -1,46 +1,23 @@
-name: Build Android APK
-
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+name: Build APK
+on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Buildozer Action
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
         with:
-          python-version: '3.10'
-
-      - name: Install System Dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y git zip unzip autoconf libtool pkg-config zlib1g-dev \
-          libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev \
-          build-essential libsqlite3-dev sqlite3 bzip2 libbz2-dev libgdbm-dev \
-          liblzma-dev libreadline-dev uuid-dev libgstreamer1.0-dev
-
-      - name: Install Buildozer and Cython
-        run: |
-          pip install --upgrade pip
-          pip install --user Cython==0.29.33 buildozer
-
-      - name: Build with Buildozer
-        run: |
-          # Используем полный путь к buildozer
-          /home/runner/.local/bin/buildozer android clean
-          yes | /home/runner/.local/bin/buildozer android debug
-        env:
-          JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
+          buildozer_version: master
+          command: buildozer android debug
+          repository_read_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v2
         with:
-          name: MusicPlayer-Build
-          path: bin/*.apk
+          name: package
+          path: ${{ steps.buildozer.outputs.filename }}
           
