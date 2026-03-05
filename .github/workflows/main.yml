@@ -5,13 +5,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Run
-        uses: ArtemSerebrennkov/buildozer-action@v1
+      - uses: ArtemSerebrennkov/buildozer-action@v1
         with:
           buildozer_version: master
           python_version: 3.11
-      - name: Upload
-        uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v3
         with:
-          name: package
+          name: my_apk
           path: bin/*.apk
