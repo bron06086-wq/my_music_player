@@ -5,18 +5,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4  # Обновлено с v2 до v4
+      - uses: actions/checkout@v4
 
       - name: Buildozer Action
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
-          buildozer_version: master
           command: buildozer android debug
-          repository_read_token: ${{ secrets.GITHUB_TOKEN }}
+          buildozer_version: master
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4  # Обновлено с v2 до v4
+        uses: actions/upload-artifact@v4
         with:
           name: package
           path: ${{ steps.buildozer.outputs.filename }}
