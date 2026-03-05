@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build
+      - name: Run
         uses: ArtemSerebrennkov/buildozer-action@v1
         with:
           buildozer_version: master
@@ -13,6 +13,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: my_apk
+          name: package
           path: bin/*.apk
-          
