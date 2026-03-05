@@ -1,27 +1,49 @@
-[app]
-title = My Music Player
-package.name = mymusicplayer
-package.domain = org.test
-source.dir = .
-source.include_exts = py,png,jpg,kv,atlas
-version = 0.1
+name: Build Android APK
 
-# ВАЖНО: Убрал Pillow, KivyMD сам возьмет что нужно стабильной версии
-requirements = python3,kivy==2.2.1,kivymd==1.1.1
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
-orientation = portrait
-fullscreen = 0
+jobs:
+  build:
+    runs-on: ubuntu-22.04 # Используем 22.04, так как на 24.04 Buildozer часто падает
 
-# Разрешения для работы с музыкой
-android.permissions = INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, MANAGE_EXTERNAL_STORAGE
+    steps:
+      - uses: actions/checkout@v4
 
-# Настройки для GitHub Actions (Ubuntu 24.04)
-android.api = 33
-android.minapi = 21
-android.ndk = 25b
-android.archs = arm64-v8a
-android.accept_sdk_license = True
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' # Самая стабильная версия для сборки Kivy
 
-# Фикс для ошибки "patch unexpectedly ends"
-p4a.branch = master
-p4a.bootstrap = sdl2
+      - name: Install System Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git zip unzip autoconf libtool pkg-config zlib1g-dev \
+          libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev \
+          python3-pip python3-setuptools build-essential libsqlite3-dev sqlite3 \
+          bzip2 libbz2-dev libgdbm-dev libgdbm-compat-dev liblzma-dev \
+          libreadline-dev uuid-dev libgstreamer1.0-dev gstreamer1.0-plugins-base \
+          gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
+          gstreamer1.0-libav libmtp-dev
+
+      - name: Install Buildozer & Cython
+        run: |
+          pip install --upgrade pip
+          pip install --user --upgrade buildozer Cython==0.29.33
+
+      - name: Build APK with Buildozer
+        run: |
+          # Команда 'yes |' автоматически принимает все лицензии Android SDK
+          yes | /home/runner/.local/bin/buildozer android debug
+        env:
+          # Принудительно используем Java 17, которая нужна для актуального SDK
+          JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MusicPlayer-Debug-APK
+          path: bin/*.apk
+          
