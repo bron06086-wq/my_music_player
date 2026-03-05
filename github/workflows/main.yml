@@ -1,0 +1,19 @@
+name: Build APK
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build with Buildozer
+        uses: ArtemSerebrennkov/buildozer-action@v1
+        id: build
+        with:
+          buildozer_version: master
+          python_version: 3.11
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: package
+          path: bin/*.apk
+          
