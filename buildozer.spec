@@ -5,7 +5,8 @@ package.domain = org.test
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 version = 0.1
-requirements = python3,kivy==2.2.1,kivymd,pillow
+# Убрал pillow отсюда, чтобы избежать конфликта патчей
+requirements = python3,kivy==2.2.1,kivymd
 orientation = portrait
 fullscreen = 0
 android.permissions = INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE
@@ -15,5 +16,5 @@ android.sdk = 33
 android.ndk = 25b
 android.archs = arm64-v8a
 android.accept_sdk_license = True
-# Это критически важно для работы на новых серверах GitHub:
+# Оставляем мастер-ветку для фикса ошибок Ubuntu 24.04
 p4a.branch = master
