@@ -1,4 +1,5 @@
-name: Final Build Fix
+name: Build Android APK
+
 on:
   push:
     branches: [ main ]
@@ -6,7 +7,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04 # Используем строго 22.04
+    # Оставляем твой выбор ОС, но фиксируем версию, 
+    # чтобы GitHub не подсунул "сломанную" новую
+    runs-on: ubuntu-22.04 
 
     steps:
       - uses: actions/checkout@v4
@@ -14,35 +17,33 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11' # Твоя версия из логов
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
           sudo apt update
           sudo apt install -y git zip unzip autoconf libtool pkg-config zlib1g-dev \
           libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev \
-          build-essential libsqlite3-dev sqlite3 bzip2 libbz2-dev libgdbm-dev \
-          liblzma-dev libreadline-dev uuid-dev libgstreamer1.0-dev
+          python3-pip build-essential libsqlite3-dev sqlite3 bzip2 libbz2-dev \
+          libgdbm-dev liblzma-dev libreadline-dev uuid-dev libgstreamer1.0-dev
 
-      - name: Install Buildozer and Cython
+      - name: Install Buildozer
         run: |
-          pip install --upgrade pip
-          pip install --user Cython==0.29.33 buildozer
-          # Исправляем возможный конфликт Pillow
-          pip install --user "Pillow<10.0.0" 
+          pip install --user --upgrade buildozer
+          # Обязательно фиксируем Cython, иначе билд упадет на компиляции
+          pip install --user Cython==0.29.33 
 
       - name: Build with Buildozer
         run: |
-          # Полная очистка перед сборкой
-          /home/runner/.local/bin/buildozer android clean
-          # Запуск сборки
+          # Используем путь к локальной папке, где лежит buildozer
           yes | /home/runner/.local/bin/buildozer android debug
         env:
+          # Исправление для Java (Buildozer теперь требует 17 версию)
           JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MusicPlayer-Fixed
+          name: my-app-bundle
           path: bin/*.apk
           
