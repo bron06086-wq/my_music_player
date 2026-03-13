@@ -4,11 +4,14 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Убираем предупреждение про Node.js
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
 
       - name: Build with Buildozer
-        # Вот тут была ошибка, теперь исправлено:
+        # Теперь путь верный:
         uses: ArtemSerebrennkov/buildozer-action@v1
         with:
           buildozer_version: stable
