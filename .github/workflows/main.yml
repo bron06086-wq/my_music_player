@@ -1,48 +1,44 @@
-# Название твоего процесса сборки (будет отображаться во вкладке Actions)
-name: Build Kivy APK (Music Player)
-
+name: Final Build APK
 on:
-  # Запуск сборки при каждом пуше (загрузке кода) в ветки main или master
   push:
-    branches: [ "main", "master" ]
-  # Позволяет запустить сборку вручную кнопкой "Run workflow" в интерфейсе GitHub
+    branches: [main, master]
   workflow_dispatch:
 
 jobs:
   build:
-    # Используем самую свежую версию Ubuntu для сборки
-    runs-on: ubuntu-latest
-
-    # Разрешения: нужны, чтобы GitHub мог сохранять созданные файлы (APK)
-    permissions:
-      contents: write
+    runs-on: ubuntu-22.04 # Используем 22.04, она стабильнее для Buildozer
 
     steps:
-      # Шаг 1: Копируем файлы твоего репозитория на виртуальную машину GitHub
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Шаг 2: Основной процесс сборки приложения через Buildozer
-      - name: Build with Buildozer
-        uses: Action-Kivy/buildozer-action@v1
-        id: buildozer
-        with:
-          # Используем последнюю версию Buildozer из GitHub
-          buildozer_version: master
-          # Версия Python. Если твой код написан на 3.11, оставляй так.
-          python_version: 3.11
-          # Точка означает, что файл buildozer.spec лежит в корне твоего проекта
-          workdir: . 
-        env:
-          # ВАЖНО: Исправляет ошибку "externally-managed-environment" (PEP 668).
-          # Позволяет устанавливать пакеты Python внутри контейнера без конфликтов.
-          PIP_BREAK_SYSTEM_PACKAGES: 1
+      - name: Install System Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+          sudo apt install -y python3-pip python3-setuptools python3-dev
+          # Устанавливаем Cython и Buildozer принудительно, обходя защиту системы
+          pip3 install --user --upgrade Cython==0.29.33 buildozer --break-system-packages
 
-      # Шаг 3: Сохранение готового APK, чтобы его можно было скачать
-      - name: Upload APK artifact
+      - name: Install Android SDK/NDK Dependencies
+        run: |
+          sudo apt install -y openjdk-17-jdk
+          # Устанавливаем доп. зависимости для 64-битных систем
+          sudo apt install -y libstdc++6:i386 libgcc1:i386 zlib1g:i386 libncurses5:i386
+
+      - name: Build with Buildozer
+        run: |
+          # Добавляем путь к локально установленному buildozer в PATH
+          export PATH=$PATH:~/.local/bin
+          # Запускаем сборку. По умолчанию используется 'android debug'
+          # Если спросит про лицензии, --yes их подтвердит
+          buildozer --verbose android debug
+        env:
+          # Важно для корректной работы Java внутри раннера
+          JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          # Название папки с файлом в разделе Artifacts
-          name: music-player-ready-apk
-          # Путь, по которому Buildozer создаст APK (стандартно папка bin)
+          name: my-music-player
           path: bin/*.apk
