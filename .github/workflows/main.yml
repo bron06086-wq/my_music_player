@@ -21,7 +21,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install Dependencies
+      - name: Install System Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y git zip unzip python3-pip python3-venv \
@@ -29,12 +29,14 @@ jobs:
           libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev \
           libstdc++6 libgcc-s1 zlib1g libncurses5
 
-      - name: Build APK
+      - name: Build with Buildozer
         run: |
+          # Создаем виртуальное окружение и ставим билдзер в один этап
           python3 -m venv venv
           source venv/bin/activate
           pip install --upgrade pip
           pip install "Cython<3.0" buildozer
+          # Запускаем сборку напрямую из venv
           yes | venv/bin/buildozer -v android debug
         env:
           JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
@@ -42,5 +44,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: my-music-player
+          name: music-player-debug
           path: bin/*.apk
+          
