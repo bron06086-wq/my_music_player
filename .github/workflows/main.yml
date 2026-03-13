@@ -1,7 +1,10 @@
-name: Build Kivy APK
+name: Build APK
+
 on:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
   workflow_dispatch:
 
 jobs:
@@ -18,34 +21,26 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install System Dependencies
+      - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git zip unzip python3-pip python3-setuptools \
-          python3-venv autoconf automake libtool pkg-config zlib1g-dev \
-          libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev \
+          sudo apt-get install -y git zip unzip python3-pip python3-venv \
+          autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev \
+          libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev \
           libstdc++6 libgcc-s1 zlib1g libncurses5
 
-      - name: Install Buildozer via VENV
+      - name: Build APK
         run: |
-          # Создаем виртуальное окружение, чтобы обойти защиту системы
           python3 -m venv venv
           source venv/bin/activate
           pip install --upgrade pip
           pip install "Cython<3.0" buildozer
-          # Добавляем путь к venv в системный PATH
-          echo "$(pwd)/venv/bin" >> $GITHUB_PATH
-
-      - name: Build with Buildozer
-        run: |
-          source venv/bin/activate
-          # Автоматическое принятие лицензий и запуск сборки
-          yes | buildozer -v android debug
+          yes | venv/bin/buildozer -v android debug
         env:
           JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
 
-      - name: Upload Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: music-player-apk
+          name: my-music-player
           path: bin/*.apk
