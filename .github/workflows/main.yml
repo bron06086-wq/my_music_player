@@ -1,34 +1,48 @@
-name: Build Music Player APK
+# Название твоего процесса сборки (будет отображаться во вкладке Actions)
+name: Build Kivy APK (Music Player)
+
 on:
+  # Запуск сборки при каждом пуше (загрузке кода) в ветки main или master
   push:
     branches: [ "main", "master" ]
+  # Позволяет запустить сборку вручную кнопкой "Run workflow" в интерфейсе GitHub
   workflow_dispatch:
 
 jobs:
   build:
+    # Используем самую свежую версию Ubuntu для сборки
     runs-on: ubuntu-latest
+
+    # Разрешения: нужны, чтобы GitHub мог сохранять созданные файлы (APK)
     permissions:
       contents: write
 
     steps:
+      # Шаг 1: Копируем файлы твоего репозитория на виртуальную машину GitHub
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Шаг 2: Основной процесс сборки приложения через Buildozer
       - name: Build with Buildozer
-        # Используем современный экшен от Action-Kivy
         uses: Action-Kivy/buildozer-action@v1
         id: buildozer
         with:
+          # Используем последнюю версию Buildozer из GitHub
           buildozer_version: master
+          # Версия Python. Если твой код написан на 3.11, оставляй так.
           python_version: 3.11
-          # Если buildozer.spec лежит в корне, оставляем точку
-          workdir: .
+          # Точка означает, что файл buildozer.spec лежит в корне твоего проекта
+          workdir: . 
         env:
-          # Этот флаг разрешает установку пакетов в новых версиях Python
+          # ВАЖНО: Исправляет ошибку "externally-managed-environment" (PEP 668).
+          # Позволяет устанавливать пакеты Python внутри контейнера без конфликтов.
           PIP_BREAK_SYSTEM_PACKAGES: 1
 
+      # Шаг 3: Сохранение готового APK, чтобы его можно было скачать
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: music-player-release
+          # Название папки с файлом в разделе Artifacts
+          name: music-player-ready-apk
+          # Путь, по которому Buildozer создаст APK (стандартно папка bin)
           path: bin/*.apk
