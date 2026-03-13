@@ -1,4 +1,4 @@
-name: Final Build APK
+name: Build Kivy APK
 on:
   push:
     branches: [main, master]
@@ -6,39 +6,57 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04 # Используем 22.04, она стабильнее для Buildozer
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install System Dependencies
+      # Устанавливаем все системные зависимости вручную
+      - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-          sudo apt install -y python3-pip python3-setuptools python3-dev
-          # Устанавливаем Cython и Buildozer принудительно, обходя защиту системы
+          sudo apt install -y \
+            python3-pip \
+            python3-setuptools \
+            git \
+            zip \
+            unzip \
+            openjdk-17-jdk \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            zlib1g-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libtinfo5 \
+            cmake \
+            libffi-dev \
+            libssl-dev \
+            libstdc++6:i386 \
+            libgcc1:i386 \
+            zlib1g:i386 \
+            libncurses5:i386
+
+      # Ставим Buildozer и Cython, игнорируя защиту системы (PEP 668)
+      - name: Install Buildozer and Cython
+        run: |
           pip3 install --user --upgrade Cython==0.29.33 buildozer --break-system-packages
+          # Добавляем путь к бинарникам в переменную окружения раннера
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Install Android SDK/NDK Dependencies
+      - name: Build APK with Buildozer
         run: |
-          sudo apt install -y openjdk-17-jdk
-          # Устанавливаем доп. зависимости для 64-битных систем
-          sudo apt install -y libstdc++6:i386 libgcc1:i386 zlib1g:i386 libncurses5:i386
-
-      - name: Build with Buildozer
-        run: |
-          # Добавляем путь к локально установленному buildozer в PATH
-          export PATH=$PATH:~/.local/bin
-          # Запускаем сборку. По умолчанию используется 'android debug'
-          # Если спросит про лицензии, --yes их подтвердит
-          buildozer --verbose android debug
+          # Принимаем все лицензии Android автоматически и запускаем сборку
+          # --verbose покажет подробный лог, если что-то пойдет не так
+          yes | buildozer -v android debug
         env:
-          # Важно для корректной работы Java внутри раннера
           JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
-      - name: Upload APK
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: my-music-player
+          name: my-player-apk
+          # Путь к файлу после успешной сборки
           path: bin/*.apk
