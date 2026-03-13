@@ -20,30 +20,27 @@ jobs:
 
       - name: Install System Dependencies
         run: |
-          # Очистка и обновление списков пакетов
-          sudo apt-get clean
-          sudo apt update
-          # Установка базовых зависимостей
+          # Включаем поддержку 32-битных пакетов (КРИТИЧНО для Android SDK)
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          
+          # Устанавливаем зависимости (исправлены имена пакетов для Ubuntu 22.04)
           sudo apt install -y git zip unzip python3-pip python3-setuptools \
           autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev \
           libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev \
-          libstdc++6:i386 libgcc1:i386 zlib1g:i386 libncurses5:i386
+          libstdc++6:i386 libgcc-s1:i386 zlib1g:i386 libncurses5:i386
 
       - name: Install Buildozer and Cython
         run: |
-          # Устанавливаем Cython и Buildozer напрямую
           pip3 install --user --upgrade "Cython<3.0" buildozer --break-system-packages
-          # Принудительно добавляем путь в систему
           echo "/home/runner/.local/bin" >> $GITHUB_PATH
 
       - name: Build with Buildozer
         run: |
-          # Команда для автоматического принятия всех лицензий Android
-          # И запуск сборки с подробным логом
+          # Принудительно обновляем PATH для текущего шага
           export PATH=$PATH:/home/runner/.local/bin
           yes | buildozer -v android debug
         env:
-          # Указываем путь к Java явно, чтобы Buildozer не запутался
           JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
 
       - name: Upload Artifact
