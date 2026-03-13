@@ -1,22 +1,46 @@
-name: Build APK
-on: [push, pull_request]
+name: Build Kivy APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Buildozer Action
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+      - name: Get Date
+        id: get-date
+        run: |
+          echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      # Кеширование помогает собирать быстрее во второй раз
+      - name: Buildozer Cache
+        uses: actions/cache@v4
         with:
-          command: buildozer android debug
-          buildozer_version: master
+          path: .buildozer
+          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
 
-      - name: Upload APK
+      - name: Build with Buildozer
+        uses: Artemis-Skade/buildozer-action@v1
+        with:
+          buildozer_version: master
+          python_version: 3.11
+          # Если твой buildozer.spec лежит в корне, оставь так. 
+          # Если в папке, напиши имя папки вместо точки.
+          workdir: .
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: package
-          path: ${{ steps.buildozer.outputs.filename }}
-          
+          name: package-${{ steps.get-date.outputs.date }}
+          path: bin/*.apk
