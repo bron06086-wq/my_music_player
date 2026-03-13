@@ -10,15 +10,18 @@ jobs:
 
     steps:
       - name: Checkout code
+        # Копируем файлы твоего репозитория
         uses: actions/checkout@v4
 
       - name: Setup Java
+        # Устанавливаем Java 17 (необходима для сборки Android)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Install System Dependencies
+        # Ставим все системные библиотеки, включая поддержку 32-битных либ
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
@@ -28,25 +31,27 @@ jobs:
           libstdc++6 libgcc-s1 zlib1g libncurses5
 
       - name: Install Buildozer via VENV
+        # Создаем виртуальное окружение и ставим Buildozer туда
         run: |
-          # Создаем виртуальное окружение, чтобы не ругался на системные пакеты
           python3 -m venv venv
           source venv/bin/activate
           pip install --upgrade pip
           pip install "Cython<3.0" buildozer
-          # Пробрасываем путь к buildozer в систему GitHub Actions
+          # Прописываем путь к venv в системный PATH экшена
           echo "$(pwd)/venv/bin" >> $GITHUB_PATH
 
       - name: Build with Buildozer
+        # Запускаем сборку. 'yes |' сам подтверждает все лицензии Android SDK
         run: |
-          # Активируем окружение и запускаем сборку
           source venv/bin/activate
           yes | buildozer -v android debug
         env:
+          # Указываем путь к Java для корректной работы Gradle
           JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
 
       - name: Upload Artifact
+        # Сохраняем готовый APK, чтобы его можно было скачать
         uses: actions/upload-artifact@v4
         with:
-          name: music-player-apk
+          name: music-player-release
           path: bin/*.apk
