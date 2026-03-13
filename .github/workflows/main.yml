@@ -20,32 +20,27 @@ jobs:
 
       - name: Install System Dependencies
         run: |
-          # 1. Включаем архитектуру i386
           sudo dpkg --add-architecture i386
-          
-          # 2. Очищаем старые кэши, которые могут давать ошибку 100
-          sudo apt-get clean
           sudo apt-get update
-          
-          # 3. Устанавливаем зависимости. 
-          # В Ubuntu 22.04 пакет libgcc1 заменен на libgcc-s1.
-          # Если i386 пакеты не находит, пробуем поставить основные версии.
           sudo apt-get install -y git zip unzip python3-pip python3-setuptools \
-          autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev \
-          libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev \
-          libstdc++6 libgcc-s1 zlib1g libncurses5 \
-          libstdc++6:i386 libgcc-s1:i386 zlib1g:i386 libncurses5:i386 || echo "Some i386 packages skipped"
+          python3-venv autoconf automake libtool pkg-config zlib1g-dev \
+          libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev \
+          libstdc++6 libgcc-s1 zlib1g libncurses5
 
-      - name: Install Buildozer and Cython
+      - name: Install Buildozer via VENV
         run: |
-          # Используем флаг для обхода защиты внешних пакетов
-          pip3 install --user --upgrade "Cython<3.0" buildozer --break-system-packages
-          echo "/home/runner/.local/bin" >> $GITHUB_PATH
+          # Создаем виртуальное окружение, чтобы не ругался на системные пакеты
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install "Cython<3.0" buildozer
+          # Пробрасываем путь к buildozer в систему GitHub Actions
+          echo "$(pwd)/venv/bin" >> $GITHUB_PATH
 
       - name: Build with Buildozer
         run: |
-          # Принудительно задаем путь и запускаем
-          export PATH=$PATH:/home/runner/.local/bin
+          # Активируем окружение и запускаем сборку
+          source venv/bin/activate
           yes | buildozer -v android debug
         env:
           JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
