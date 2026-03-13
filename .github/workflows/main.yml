@@ -12,44 +12,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Устанавливаем все системные зависимости вручную
-      - name: Install dependencies
+      - name: Install System Dependencies
         run: |
           sudo apt update
-          sudo apt install -y \
-            python3-pip \
-            python3-setuptools \
-            git \
-            zip \
-            unzip \
-            openjdk-17-jdk \
-            autoconf \
-            automake \
-            libtool \
-            pkg-config \
-            zlib1g-dev \
-            libncurses5-dev \
-            libncursesw5-dev \
-            libtinfo5 \
-            cmake \
-            libffi-dev \
-            libssl-dev \
-            libstdc++6:i386 \
-            libgcc1:i386 \
-            zlib1g:i386 \
-            libncurses5:i386
+          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip python3-setuptools \
+          autoconf automake libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev \
+          libtinfo5 cmake libffi-dev libssl-dev libstdc++6:i386 libgcc1:i386 zlib1g:i386 \
+          libncurses5:i386
 
-      # Ставим Buildozer и Cython, игнорируя защиту системы (PEP 668)
       - name: Install Buildozer and Cython
         run: |
-          pip3 install --user --upgrade Cython==0.29.33 buildozer --break-system-packages
-          # Добавляем путь к бинарникам в переменную окружения раннера
+          # Используем флаг для обхода защиты системы
+          pip3 install --user --upgrade "Cython<3.0" buildozer --break-system-packages
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Build APK with Buildozer
+      - name: Build with Buildozer
         run: |
-          # Принимаем все лицензии Android автоматически и запускаем сборку
-          # --verbose покажет подробный лог, если что-то пойдет не так
+          # Автоматически принимаем все лицензии Android SDK
           yes | buildozer -v android debug
         env:
           JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
@@ -57,6 +36,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: my-player-apk
-          # Путь к файлу после успешной сборки
+          name: my-app-apk
           path: bin/*.apk
