@@ -1,46 +1,27 @@
-name: Build Kivy APK
-
+name: Build APK
 on:
   push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+    branches: [main, master]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Get Date
-        id: get-date
-        run: |
-          echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
-      # Кеширование помогает собирать быстрее во второй раз
-      - name: Buildozer Cache
-        uses: actions/cache@v4
-        with:
-          path: .buildozer
-          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+      - uses: actions/checkout@v4
 
       - name: Build with Buildozer
+        # Используем Artemis-Skade, он стабильнее
         uses: Artemis-Skade/buildozer-action@v1
         with:
           buildozer_version: master
           python_version: 3.11
-          # Если твой buildozer.spec лежит в корне, оставь так. 
-          # Если в папке, напиши имя папки вместо точки.
-          workdir: .
+        env:
+          # Принудительно задаем пользователя, чтобы избежать ошибки chown
+          USER: runner
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: package-${{ steps.get-date.outputs.date }}
+          name: my-music-player-apk
           path: bin/*.apk
